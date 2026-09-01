@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#087d91">
+  <title>Writing in the Sand</title>
+  <style>
+    :root { --shore: 49%; --foam: 49%; --swell: 0px; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #087e91; }
+    body { font-family: Georgia, 'Times New Roman', serif; -webkit-tap-highlight-color: transparent; }
+    main { position: relative; isolation: isolate; height: 100%; min-height: 540px; overflow: hidden; cursor: text; background: #dca565; }
+
+    .sand, .ocean, .foam, .wetness, .glimmer { position: absolute; inset: 0; pointer-events: none; }
+    .sand {
+      z-index: 0;
+      background:
+        radial-gradient(ellipse at 16% 78%, rgba(105,58,23,.12) 0 1px, transparent 1.8px),
+        radial-gradient(ellipse at 73% 88%, rgba(112,61,23,.1) 0 1px, transparent 1.6px),
+        radial-gradient(ellipse at 43% 57%, rgba(255,239,184,.28), transparent 37%),
+        linear-gradient(108deg, #d59750, #e7b871 36%, #cc8d47 100%);
+      background-size: 11px 13px, 17px 19px, auto, auto;
+    }
+    .wetness {
+      z-index: 1;
+      top: calc(var(--shore) - 2%); bottom: auto; height: 25%;
+      opacity: .55;
+      background: linear-gradient(to bottom, rgba(70,102,89,.28), transparent 74%);
+      mix-blend-mode: multiply;
+      transition: top .18s linear;
+    }
+    .ocean {
+      z-index: 2; inset: 0 0 auto; height: var(--shore);
+      overflow: visible;
+      background:
+        radial-gradient(ellipse at 76% 10%, rgba(139,238,236,.25), transparent 23%),
+        radial-gradient(ellipse at 8% 42%, rgba(1,69,98,.65), transparent 39%),
+        repeating-radial-gradient(ellipse at 50% -20%, transparent 0 9px, rgba(114,235,234,.12) 10px 11px, transparent 13px 22px),
+        linear-gradient(140deg, #075a78 0%, #067d91 43%, #0daaaa 100%);
+      transition: height .13s linear;
+      box-shadow: 0 13px 27px rgba(0,70,84,.22);
+    }
+    .ocean::before, .ocean::after { content: ''; position: absolute; inset: 0; opacity: .6; background-size: 84px 28px; mix-blend-mode: screen; }
+    .ocean::before { background-image: repeating-linear-gradient(173deg, transparent 0 9px, rgba(187,255,246,.16) 10px 11px, transparent 13px 23px); animation: ripple 9s linear infinite; }
+    .ocean::after { left: -10%; width: 120%; top: auto; bottom: -22px; height: 47px; opacity: 1; background: #d9fbeb; filter: url(#wave-warp); clip-path: polygon(0 51%, 5% 28%, 11% 65%, 17% 33%, 25% 60%, 33% 24%, 41% 57%, 49% 36%, 57% 70%, 66% 29%, 75% 54%, 82% 24%, 89% 60%, 95% 34%, 100% 49%, 100% 100%, 0 100%); animation: shore 4s ease-in-out infinite alternate; }
+    .foam {
+      z-index: 4; inset: auto -5% calc(100% - var(--shore) - 30px); height: 64px;
+      opacity: .95; filter: url(#foam-warp) blur(.15px); mix-blend-mode: screen;
+      background: radial-gradient(ellipse at 13px 10px, rgba(255,255,250,.95) 0 3px, transparent 4px) 0 0 / 29px 20px,
+        radial-gradient(ellipse at 7px 21px, rgba(230,252,245,.82) 0 5px, transparent 7px) 5px 0 / 34px 24px,
+        linear-gradient(to bottom, transparent 21%, rgba(245,255,250,.9) 45%, rgba(195,244,232,.45) 72%, transparent 93%);
+      transition: bottom .13s linear; animation: foamDrift 5s linear infinite;
+    }
+    .glimmer { z-index: 3; height: var(--shore); bottom: auto; opacity: .55; mix-blend-mode: screen; background: linear-gradient(105deg, transparent 25%, rgba(225,255,239,.13) 38%, transparent 50%); background-size: 180px 100%; animation: shimmer 6s linear infinite; }
+    .message {
+      position: absolute; z-index: 3; min-width: 130px; max-width: min(74vw, 700px); padding: 5px 8px 9px;
+      color: rgba(93,60,29,.86); font-size: clamp(27px, 5vw, 58px); font-style: italic; line-height: 1.04; letter-spacing: .025em;
+      text-shadow: 1px 1px 0 rgba(255,238,191,.43), -1px -1px 1px rgba(88,52,22,.28), 0 3px 3px rgba(74,43,21,.23);
+      outline: none; caret-color: rgba(255,250,218,.9); white-space: pre-wrap; overflow-wrap: break-word;
+      transform-origin: 50% 100%; transition: opacity .12s linear, filter .12s linear;
+    }
+    .message:empty::before { content: 'write here'; color: rgba(104,75,44,.35); font-size: .58em; font-style: normal; letter-spacing: .07em; text-shadow: none; }
+    .message.washing { pointer-events: none; }
+    .tide-note { position: absolute; z-index: 8; left: 50%; bottom: 22px; transform: translateX(-50%); color: rgba(255,245,213,.7); font: 11px/1.2 system-ui, sans-serif; letter-spacing: .18em; text-transform: uppercase; white-space: nowrap; opacity: 0; transition: opacity .8s; pointer-events: none; }
+    .tide-note.show { opacity: 1; }
+    @keyframes ripple { from { background-position: 0 0; } to { background-position: 84px 35px; } }
+    @keyframes shore { from { transform: translateX(-1.5%) scaleY(.9); } to { transform: translateX(1.5%) scaleY(1.13); } }
+    @keyframes foamDrift { from { background-position: 0 0, 0 0, 0 0; } to { background-position: 58px 7px, -39px 3px, 0 0; } }
+    @keyframes shimmer { from { background-position: -180px 0; } to { background-position: calc(100% + 180px) 0; } }
+    @media (max-width: 560px) { main { min-height: 470px; } .message { max-width: 82vw; } }
+  </style>
+</head>
+<body>
+  <main id="beach" aria-label="An interactive beach. The sea recedes, then returns to erase what is written in the sand.">
+    <div class="sand"></div><div class="wetness"></div><div class="ocean"></div><div class="glimmer"></div><div class="foam"></div>
+    <div class="tide-note" id="tideNote" aria-live="polite"></div>
+  </main>
+  <svg width="0" height="0" aria-hidden="true"><filter id="wave-warp"><feTurbulence type="fractalNoise" baseFrequency=".018 .1" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="9"/></filter><filter id="foam-warp"><feTurbulence type="fractalNoise" baseFrequency=".012 .2" numOctaves="2" seed="8"/><feDisplacementMap in="SourceGraphic" scale="13"/></filter></svg>
+  <script>
+    // Tune these durations (milliseconds) to change the rhythm of the tide.
+    const TIMING = { recede: 5000, writing: 10000, return: 5500, reset: 2100 };
+    const beach = document.getElementById('beach');
+    const note = document.getElementById('tideNote');
+    let phase = 'recede', phaseStart = performance.now(), message = null, messageY = 0;
+    const states = { recede: [70, 49], writing: [49, 49], return: [49, 83], reset: [83, 70] };
+    const duration = () => TIMING[phase];
+    const ease = t => t * t * (3 - 2 * t);
+    function advance(now) { phaseStart = now; phase = phase === 'recede' ? 'writing' : phase === 'writing' ? 'return' : phase === 'return' ? 'reset' : 'recede'; }
+    function setMessageWash(shore) {
+      if (!message) return;
+      const h = beach.clientHeight, textTop = messageY / h * 100;
+      const wash = Math.max(0, Math.min(1, (shore - textTop + 1) / 16));
+      if (wash > 0 && phase === 'return') {
+        message.classList.add('washing');
+        message.style.opacity = String(1 - wash * .95);
+        message.style.filter = `blur(${wash * 2.4}px) url(#foam-warp)`;
+        message.style.transform = `skewX(${Math.sin(wash * 17) * wash * 7}deg) scaleY(${1 - wash * .13}) translateY(${wash * 6}px)`;
+        message.style.clipPath = `inset(${wash * 34}% 0 0 0)`;
+      }
+      if (wash > .94) { message.remove(); message = null; }
+    }
+    function tick(now) {
+      let t = Math.min(1, (now - phaseStart) / duration());
+      if (t >= 1) { advance(now); t = 0; }
+      const [from, to] = states[phase], shore = from + (to - from) * ease(t);
+      beach.style.setProperty('--shore', `${shore}%`);
+      setMessageWash(shore);
+      note.textContent = phase === 'writing' ? 'the sand is listening' : phase === 'return' ? 'the sea is coming' : '';
+      note.classList.toggle('show', phase === 'return' && t > .18);
+      requestAnimationFrame(tick);
+    }
+    function editable() { return phase === 'writing'; }
+    function placeMessage(event) {
+      if (!editable() || event.target.closest('.message')) return;
+      const box = beach.getBoundingClientRect();
+      const x = (event.clientX || (event.touches && event.touches[0].clientX)) - box.left;
+      const y = (event.clientY || (event.touches && event.touches[0].clientY)) - box.top;
+      // Only the exposed wet-sand band is writable; everything here will meet the returning tide.
+      if (y < box.height * .49 || y > box.height * .77) return;
+      if (message) message.remove();
+      message = document.createElement('div'); message.className = 'message'; message.contentEditable = 'true'; message.setAttribute('role', 'textbox'); message.setAttribute('aria-label', 'Your message in the sand');
+      message.style.left = `${Math.max(10, Math.min(x - 8, box.width - 150))}px`;
+      message.style.top = `${y - 25}px`; messageY = y - 25;
+      message.addEventListener('input', () => { if (message && message.textContent.length > 160) message.textContent = message.textContent.slice(0, 160); });
+      message.addEventListener('blur', () => { if (message && !message.textContent.trim()) { message.remove(); message = null; } });
+      beach.append(message); message.focus();
+    }
+    beach.addEventListener('pointerdown', placeMessage);
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && message) { message.blur(); } });
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>
